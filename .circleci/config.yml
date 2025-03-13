@@ -38,8 +38,8 @@ jobs:
             - ./node_modules
 
   deploy:
-    machine:  
-      image: ubuntu-2004
+    deploy:  
+      image: circleci/node:10.16.3
     steps:
       - checkout
       - run:
