@@ -1,41 +1,28 @@
 var app = require('../app');
 var debug = require('debug')('phishsense:server');
 var http = require('http');
+var fs = require('fs');
+var https = require('https');
 
 /**
  * Normalize a port into a number, string, or false.
  */
-
 function normalizePort(val) {
   var port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
+  if (isNaN(port)) return val; // Named pipe
+  if (port >= 0) return port; // Port number
   return false;
 }
 
 /**
  * Event listener for HTTP server "error" event.
  */
-
 function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+  if (error.syscall !== 'listen') throw error;
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
-  // handle specific listen errors with friendly messages
+  // Handle specific listen errors
   switch (error.code) {
     case 'EACCES':
       console.error(bind + ' requires elevated privileges');
@@ -53,80 +40,44 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
+  var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
 
+// Set port to 8443 to match Security Group settings
+var port = normalizePort(process.env.PORT || '8443');
+var options = {};
 
-// Add HTTPS Section
-var fs = require('fs');
-var https = require('https');
-var port = normalizePort(process.env.PORT || '8080');
-var https_port    =   process.env.PORT_HTTPS || 8443;
-var options = {}
+if (process.env.ENV !== "DEV") {
+  var privatekey = fs.readFileSync('privatekey.pem', "utf8");
+  var cert = fs.readFileSync('server.crt', "utf8");
 
-if(process.env.ENV !== "DEV") {
-  var privatekey = fs.readFileSync('privatekey.pem', "utf8")
-  console.log(typeof privatekey)
-  var cert = fs.readFileSync('server.crt', "utf8")
-  var header = "-----BEGIN PRIVATE KEY-----"
-  var footer = "-----END PRIVATE KEY-----"
-  console.log(privatekey.split(header))
-  privatekey= privatekey.split(header)[1]
-  privatekey = privatekey.split(footer)[0]
-  privatekey = header + "\n" + privatekey.replace(/ /g, "\n") + footer+"\n"
+  // Format private key and certificate
+  privatekey = "-----BEGIN PRIVATE KEY-----\n" + 
+               privatekey.split("-----BEGIN PRIVATE KEY-----")[1].split("-----END PRIVATE KEY-----")[0].replace(/ /g, "\n") + 
+               "\n-----END PRIVATE KEY-----\n";
 
-  console.log(privatekey)
+  cert = "-----BEGIN CERTIFICATE-----\n" + 
+         cert.split("-----BEGIN CERTIFICATE-----")[1].split("-----END CERTIFICATE-----")[0].replace(/ /g, "\n") + 
+         "\n-----END CERTIFICATE-----\n";
 
+  options = { key: privatekey, cert: cert };
 
-  var header = "-----BEGIN CERTIFICATE-----"
-  var footer = "-----END CERTIFICATE-----"
-  cert= cert.split(header)[1]
-  cert = cert.split(footer)[0]
-  cert = header + "\n" + cert.replace(/ /g, "\n") + footer+"\n"
+  app.set("port", port);
 
-  var options = {
-    key  : privatekey,
-    cert : cert
-  };
-  app.set("port",https_port);
-
-  /*
-  ° Create HTTPS server.
-  */
-  var server = https.createServer(options, app).listen(https_port, function () {
-  console.log('Magic happens on port ' + https_port);
+  // Start HTTPS server
+  var server = https.createServer(options, app).listen(port, function () {
+    console.log('Server running securely on port ' + port);
   });
-
-  /**
-  * Listen on provided port, on all network interfaces.
-  */
 
   server.on('error', onError);
   server.on('listening', onListening);
-
-  // Redirect from http port to https
-  http.createServer(function (req, res) {
-    res.writeHead(301, { "Location": "https://" + req.headers['host'].replace(port,https_port) + req.url });
-    console.log("http requet, will go to >> ");
-    console.log("https://" + req.headers['host'].replace(port,https_port) + req.url );
-    res.end();
-  }).listen(port);
 } else {
-
+  // Dev mode uses HTTP (useful for testing locally)
   var server = http.createServer(app);
-
-  /**
-   * Listen on provided port, on all network interfaces.
-   */
-
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
-
 }
