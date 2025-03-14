@@ -7,7 +7,7 @@ sudo apt update && sudo apt install nodejs npm -y
 sudo npm install -g pm2
 
 # Stop any instance of our application currently running
-pm2 stop simple_app
+pm2 stop SimpleApllication
 
 # Change directory to the application folder
 cd SimpleApplication/
@@ -18,4 +18,4 @@ echo $PRIVATE_KEY > privatekey.pem
 echo $SERVER > server.crt
 
 # Start the application using pm2 with the process name simple_app
-pm2 start ./bin/www --name simple_app
+pm2 start ./bin/www --name SimpleApplication
