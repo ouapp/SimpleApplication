@@ -43,4 +43,4 @@ jobs:
     steps:
       - run:
           name: deploy-application
-          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "export SERVER=\"$SERVER\"; export PRIVATE_KEY=\"$PRIVATE_KEY\"; rm -rf SimpleApplication/; git clone https://github.com/ouapp/SimpleApplication.git; source SimpleApplication/deploy.sh"
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$E2_PUBLIC_DNS "export SERVER=\"$SERVER\"; export PRIVATE_KEY=\"$PRIVATE_KEY\"; rm -rf SimpleApplication/; git clone https://github.com/ouapp/SimpleApplication.git; source SimpleApplication/deploy.sh"
