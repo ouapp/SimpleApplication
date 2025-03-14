@@ -7,7 +7,7 @@ sudo apt update && sudo apt install nodejs npm -y
 sudo npm install -g pm2
 
 # Stop any instance of our application currently running
-pm2 stop SimpleApllication
+pm2 stop SimpleApplication
 
 # Change directory to the application folder
 cd SimpleApplication/
